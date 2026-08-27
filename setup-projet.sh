@@ -207,6 +207,170 @@ router.get('/', (req, res) => {
 module.exports = router;
 EOF
 
+echo "Creation de src/models/Pointage.js..."
+cat > src/models/Pointage.js << 'EOF'
+const mongoose = require('mongoose');
+
+const pointageSchema = new mongoose.Schema(
+  {
+    employe: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Employe',
+      required: [true, "L'employé est obligatoire"],
+    },
+    date: {
+      type: Date,
+      required: [true, 'La date est obligatoire'],
+      validate: {
+        validator: function (valeur) {
+          const jour = valeur.getDay();
+          return jour !== 0 && jour !== 6;
+        },
+        message: 'Le pointage ne peut concerner que les jours ouvrés (lundi à vendredi)',
+      },
+    },
+    arriveeMatin: {
+      type: Boolean,
+      default: false,
+    },
+    departMatin: {
+      type: Boolean,
+      default: false,
+    },
+    arriveeApresMidi: {
+      type: Boolean,
+      default: false,
+    },
+    departApresMidi: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+pointageSchema.index({ employe: 1, date: 1 }, { unique: true });
+
+module.exports = mongoose.model('Pointage', pointageSchema);
+EOF
+
+echo "Creation de src/controllers/pointageController.js..."
+cat > src/controllers/pointageController.js << 'EOF'
+const Pointage = require('../models/Pointage');
+
+const creerPointage = async (req, res, next) => {
+  try {
+    const pointage = await Pointage.create(req.body);
+    res.status(201).json(pointage);
+  } catch (error) {
+    if (error.code === 11000) {
+      res.status(400);
+      return next(new Error('Un pointage existe déjà pour cet employé à cette date'));
+    }
+    res.status(400);
+    next(error);
+  }
+};
+
+const getPointages = async (req, res, next) => {
+  try {
+    const filtre = {};
+    if (req.query.employe) filtre.employe = req.query.employe;
+    if (req.query.date) {
+      const debut = new Date(req.query.date);
+      const fin = new Date(req.query.date);
+      fin.setDate(fin.getDate() + 1);
+      filtre.date = { $gte: debut, $lt: fin };
+    }
+
+    const pointages = await Pointage.find(filtre)
+      .populate('employe', 'matricule nom prenoms departement')
+      .sort({ date: -1 });
+    res.json(pointages);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getPointageParId = async (req, res, next) => {
+  try {
+    const pointage = await Pointage.findById(req.params.id).populate(
+      'employe',
+      'matricule nom prenoms departement'
+    );
+    if (!pointage) {
+      res.status(404);
+      return next(new Error('Pointage non trouvé'));
+    }
+    res.json(pointage);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const modifierPointage = async (req, res, next) => {
+  try {
+    const pointage = await Pointage.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!pointage) {
+      res.status(404);
+      return next(new Error('Pointage non trouvé'));
+    }
+    res.json(pointage);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const supprimerPointage = async (req, res, next) => {
+  try {
+    const pointage = await Pointage.findByIdAndDelete(req.params.id);
+    if (!pointage) {
+      res.status(404);
+      return next(new Error('Pointage non trouvé'));
+    }
+    res.json({ message: 'Pointage supprimé avec succès' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  creerPointage,
+  getPointages,
+  getPointageParId,
+  modifierPointage,
+  supprimerPointage,
+};
+EOF
+
+echo "Creation de src/routes/pointageRoutes.js..."
+cat > src/routes/pointageRoutes.js << 'EOF'
+const express = require('express');
+const router = express.Router();
+const {
+  creerPointage,
+  getPointages,
+  getPointageParId,
+  modifierPointage,
+  supprimerPointage,
+} = require('../controllers/pointageController');
+
+router.route('/').post(creerPointage).get(getPointages);
+
+router
+  .route('/:id')
+  .get(getPointageParId)
+  .put(modifierPointage)
+  .delete(supprimerPointage);
+
+module.exports = router;
+EOF
+
 echo "Creation de src/app.js..."
 cat > src/app.js << 'EOF'
 const express = require('express');
@@ -214,6 +378,7 @@ const cors = require('cors');
 const errorHandler = require('./middlewares/errorHandler');
 const testRoutes = require('./routes/testRoutes');
 const employeRoutes = require('./routes/employeRoutes');
+const pointageRoutes = require('./routes/pointageRoutes');
 
 const app = express();
 
@@ -222,6 +387,7 @@ app.use(express.json());
 
 app.use('/api/test', testRoutes);
 app.use('/api/employes', employeRoutes);
+app.use('/api/pointages', pointageRoutes);
 
 app.use(errorHandler);
 
