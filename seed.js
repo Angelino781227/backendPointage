@@ -1,61 +1,38 @@
 require('dotenv').config();
-const mongoose = require('mongoose');
+const { faker } = require('@faker-js/faker');
 const connectDB = require('./src/config/db');
 const Employe = require('./src/models/Employe');
 const Pointage = require('./src/models/Pointage');
 
-const employesFictifs = [
-  {
-    matricule: 'EMP-001',
-    cin: '101021012345',
-    nom: 'Rakoto',
-    prenoms: 'Jean',
-    departement: 'Informatique',
-    fonction: 'Développeur backend',
-    telephone: '034 12 345 67',
-    adresse: 'Antananarivo',
-  },
-  {
-    matricule: 'EMP-002',
-    cin: '101021054321',
-    nom: 'Rasoa',
-    prenoms: 'Marie',
-    departement: 'Ressources Humaines',
-    fonction: 'Responsable RH',
-    telephone: '033 98 765 43',
-    adresse: 'Antananarivo',
-  },
-  {
-    matricule: 'EMP-003',
-    cin: '101021067890',
-    nom: 'Andry',
-    prenoms: 'Paul',
-    departement: 'Comptabilité',
-    fonction: 'Comptable',
-    telephone: '032 11 223 34',
-    adresse: 'Antsirabe',
-  },
-  {
-    matricule: 'EMP-004',
-    cin: '101021011223',
-    nom: 'Voahangy',
-    prenoms: 'Sarah',
-    departement: 'Informatique',
-    fonction: 'Développeuse frontend',
-    telephone: '034 55 667 78',
-    adresse: 'Antananarivo',
-  },
-  {
-    matricule: 'EMP-005',
-    cin: '101021099887',
-    nom: 'Rabe',
-    prenoms: 'Tovo',
-    departement: 'Logistique',
-    fonction: 'Responsable stock',
-    telephone: '033 44 556 89',
-    adresse: 'Toamasina',
-  },
-];
+const departements = ['Informatique', 'Ressources Humaines', 'Comptabilité', 'Logistique', 'Marketing', 'Production'];
+const fonctionsParDepartement = {
+  'Informatique': ['Développeur backend', 'Développeuse frontend', 'Administrateur système', 'Chef de projet IT'],
+  'Ressources Humaines': ['Responsable RH', 'Chargé de recrutement', 'Gestionnaire de paie'],
+  'Comptabilité': ['Comptable', 'Contrôleur de gestion', 'Auditeur interne'],
+  'Logistique': ['Responsable stock', 'Magasinier', 'Coordinateur logistique'],
+  'Marketing': ['Chargé de communication', 'Responsable marketing', 'Community manager'],
+  'Production': ["Chef d'équipe", 'Technicien de production', 'Superviseur qualité'],
+};
+const villes = ['Antananarivo', 'Antsirabe', 'Toamasina', 'Fianarantsoa', 'Mahajanga', 'Toliara'];
+
+const genererCIN = () => faker.string.numeric(12);
+const genererMatricule = (index) => `EMP-${String(index).padStart(3, '0')}`;
+
+const genererEmployeFictif = (index) => {
+  const departement = faker.helpers.arrayElement(departements);
+  const fonction = faker.helpers.arrayElement(fonctionsParDepartement[departement]);
+
+  return {
+    matricule: genererMatricule(index),
+    cin: genererCIN(),
+    nom: faker.person.lastName(),
+    prenoms: faker.person.firstName(),
+    departement,
+    fonction,
+    telephone: faker.phone.number({ style: 'national' }),
+    adresse: faker.helpers.arrayElement(villes),
+  };
+};
 
 const getJoursOuvresSemaine = () => {
   const jours = [];
@@ -82,23 +59,29 @@ const importerDonnees = async () => {
     await Pointage.deleteMany();
     console.log('Anciennes données supprimées.');
 
+    const nombreEmployes = faker.number.int({ min: 5, max: 10 });
+    const employesFictifs = Array.from({ length: nombreEmployes }, (_, i) =>
+      genererEmployeFictif(i + 1)
+    );
+
     const employesCrees = await Employe.insertMany(employesFictifs);
-    console.log(`${employesCrees.length} employés créés.`);
+    console.log(`${employesCrees.length} employés créés (aléatoire entre 5 et 10).`);
 
     const joursOuvres = getJoursOuvresSemaine();
     const pointagesFictifs = [];
 
     employesCrees.forEach((employe) => {
       joursOuvres.forEach((jour) => {
-        const present = Math.random() > 0.15;
+        const tauxPresence = faker.number.float({ min: 0.75, max: 0.95 });
+        const present = Math.random() < tauxPresence;
 
         pointagesFictifs.push({
           employe: employe._id,
           date: jour,
           arriveeMatin: present,
-          departMatin: present,
+          departMatin: present && Math.random() > 0.05,
           arriveeApresMidi: present && Math.random() > 0.1,
-          departApresMidi: present && Math.random() > 0.1,
+          departApresMidi: present && Math.random() > 0.05,
         });
       });
     });
