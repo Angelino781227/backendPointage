@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const departementSchema = new mongoose.Schema(
     {
         idDepartement: {
-            type: String,
+            type: Number,
+            autoIncrement: true,
             required: true,
             unique: true
         },
