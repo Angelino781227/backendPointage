@@ -1,51 +1,52 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
 
-const employeSchema = new mongoose.Schema(
+const Employe = sequelize.define(
+  'Employe',
   {
     matricule: {
-      type: String,
-      required: [true, 'Le matricule est obligatoire'],
+      type: DataTypes.STRING,
+      allowNull: false,
       unique: true,
-      trim: true,
+      validate: { notEmpty: { msg: 'Le matricule est obligatoire' } },
     },
     cin: {
-      type: String,
-      required: [true, 'Le CIN est obligatoire'],
+      type: DataTypes.STRING,
+      allowNull: false,
       unique: true,
-      trim: true,
+      validate: { notEmpty: { msg: 'Le CIN est obligatoire' } },
     },
     nom: {
-      type: String,
-      required: [true, 'Le nom est obligatoire'],
-      trim: true,
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: { notEmpty: { msg: 'Le nom est obligatoire' } },
     },
     prenoms: {
-      type: String,
-      required: [true, 'Les prénoms sont obligatoires'],
-      trim: true,
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: { notEmpty: { msg: 'Les prénoms sont obligatoires' } },
     },
     departement: {
-      type: String,
-      required: [true, 'Le département est obligatoire'],
-      trim: true,
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: { notEmpty: { msg: 'Le département est obligatoire' } },
     },
     fonction: {
-      type: String,
-      required: [true, 'La fonction est obligatoire'],
-      trim: true,
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: { notEmpty: { msg: 'La fonction est obligatoire' } },
     },
     telephone: {
-      type: String,
-      trim: true,
+      type: DataTypes.STRING,
     },
     adresse: {
-      type: String,
-      trim: true,
+      type: DataTypes.STRING,
     },
   },
   {
+    tableName: 'employes',
     timestamps: true,
   }
 );
 
-module.exports = mongoose.model('Employe', employeSchema);
+module.exports = Employe;

@@ -1,31 +1,30 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
 
-const departementSchema = new mongoose.Schema(
-    {
-        idDepartement: {
-            type: Number,
-            autoIncrement: true,
-            required: true,
-            unique: true
-        },
-        nomDepartement: {
-            type: String,
-            required: true,
-            unique: true
-        },
-        chefDepartement: {
-            type: String,
-            required: true,
-        },
-        nombreEmploye: {
-            type: Number,
-            required: true
-        },
+const Departement = sequelize.define(
+  'Departement',
+  {
+    nomDepartement: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+      validate: { notEmpty: { msg: 'Le nom du département est obligatoire' } },
     },
-    {
-        timestamps: true,
-    }
+    chefDepartement: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: { notEmpty: { msg: 'Le chef de département est obligatoire' } },
+    },
+    nombreEmploye: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+  },
+  {
+    tableName: 'departements',
+    timestamps: true,
+  }
 );
 
-module.exports = mongoose.model('Departement', departementSchema);
-
+module.exports = Departement;

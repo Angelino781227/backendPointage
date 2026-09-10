@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { faker } = require('@faker-js/faker');
-const connectDB = require('./src/config/db');
+const { sequelize, connectDB } = require('./src/config/db');
 const Employe = require('./src/models/Employe');
 const Pointage = require('./src/models/Pointage');
 
@@ -45,8 +45,7 @@ const getJoursOuvresSemaine = () => {
   for (let i = 0; i < 5; i++) {
     const jour = new Date(lundi);
     jour.setDate(lundi.getDate() + i);
-    jour.setHours(0, 0, 0, 0);
-    jours.push(jour);
+    jours.push(jour.toISOString().split('T')[0]); // format YYYY-MM-DD pour DATEONLY
   }
   return jours;
 };
@@ -54,17 +53,14 @@ const getJoursOuvresSemaine = () => {
 const importerDonnees = async () => {
   try {
     await connectDB();
-
-    await Employe.deleteMany();
-    await Pointage.deleteMany();
-    console.log('Anciennes données supprimées.');
+    await sequelize.sync({ force: true }); // recrée les tables à chaque seed
 
     const nombreEmployes = faker.number.int({ min: 5, max: 10 });
     const employesFictifs = Array.from({ length: nombreEmployes }, (_, i) =>
       genererEmployeFictif(i + 1)
     );
 
-    const employesCrees = await Employe.insertMany(employesFictifs);
+    const employesCrees = await Employe.bulkCreate(employesFictifs);
     console.log(`${employesCrees.length} employés créés (aléatoire entre 5 et 10).`);
 
     const joursOuvres = getJoursOuvresSemaine();
@@ -76,7 +72,7 @@ const importerDonnees = async () => {
         const present = Math.random() < tauxPresence;
 
         pointagesFictifs.push({
-          employe: employe._id,
+          employeId: employe.id,
           date: jour,
           arriveeMatin: present,
           departMatin: present && Math.random() > 0.05,
@@ -86,7 +82,7 @@ const importerDonnees = async () => {
       });
     });
 
-    const pointagesCrees = await Pointage.insertMany(pointagesFictifs);
+    const pointagesCrees = await Pointage.bulkCreate(pointagesFictifs);
     console.log(`${pointagesCrees.length} pointages créés.`);
 
     console.log('Import terminé avec succès !');
@@ -100,8 +96,8 @@ const importerDonnees = async () => {
 const supprimerDonnees = async () => {
   try {
     await connectDB();
-    await Employe.deleteMany();
-    await Pointage.deleteMany();
+    await Pointage.destroy({ where: {}, truncate: true });
+    await Employe.destroy({ where: {}, truncate: true });
     console.log('Toutes les données ont été supprimées.');
     process.exit();
   } catch (error) {

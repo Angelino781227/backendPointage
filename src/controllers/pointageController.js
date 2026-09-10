@@ -1,11 +1,12 @@
 const Pointage = require('../models/Pointage');
+const Employe = require('../models/Employe');
 
 const creerPointage = async (req, res, next) => {
   try {
     const pointage = await Pointage.create(req.body);
     res.status(201).json(pointage);
   } catch (error) {
-    if (error.code === 11000) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
       res.status(400);
       return next(new Error('Un pointage existe déjà pour cet employé à cette date'));
     }
@@ -17,17 +18,14 @@ const creerPointage = async (req, res, next) => {
 const getPointages = async (req, res, next) => {
   try {
     const filtre = {};
-    if (req.query.employe) filtre.employe = req.query.employe;
-    if (req.query.date) {
-      const debut = new Date(req.query.date);
-      const fin = new Date(req.query.date);
-      fin.setDate(fin.getDate() + 1);
-      filtre.date = { $gte: debut, $lt: fin };
-    }
+    if (req.query.employe) filtre.employeId = req.query.employe;
+    if (req.query.date) filtre.date = req.query.date; // format attendu : YYYY-MM-DD
 
-    const pointages = await Pointage.find(filtre)
-      .populate('employe', 'matricule nom prenoms departement')
-      .sort({ date: -1 });
+    const pointages = await Pointage.findAll({
+      where: filtre,
+      include: [{ model: Employe, attributes: ['matricule', 'nom', 'prenoms', 'departement'] }],
+      order: [['date', 'DESC']],
+    });
     res.json(pointages);
   } catch (error) {
     next(error);
@@ -36,10 +34,9 @@ const getPointages = async (req, res, next) => {
 
 const getPointageParId = async (req, res, next) => {
   try {
-    const pointage = await Pointage.findById(req.params.id).populate(
-      'employe',
-      'matricule nom prenoms departement'
-    );
+    const pointage = await Pointage.findByPk(req.params.id, {
+      include: [{ model: Employe, attributes: ['matricule', 'nom', 'prenoms', 'departement'] }],
+    });
     if (!pointage) {
       res.status(404);
       return next(new Error('Pointage non trouvé'));
@@ -52,14 +49,12 @@ const getPointageParId = async (req, res, next) => {
 
 const modifierPointage = async (req, res, next) => {
   try {
-    const pointage = await Pointage.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const pointage = await Pointage.findByPk(req.params.id);
     if (!pointage) {
       res.status(404);
       return next(new Error('Pointage non trouvé'));
     }
+    await pointage.update(req.body);
     res.json(pointage);
   } catch (error) {
     next(error);
@@ -68,11 +63,12 @@ const modifierPointage = async (req, res, next) => {
 
 const supprimerPointage = async (req, res, next) => {
   try {
-    const pointage = await Pointage.findByIdAndDelete(req.params.id);
+    const pointage = await Pointage.findByPk(req.params.id);
     if (!pointage) {
       res.status(404);
       return next(new Error('Pointage non trouvé'));
     }
+    await pointage.destroy();
     res.json({ message: 'Pointage supprimé avec succès' });
   } catch (error) {
     next(error);

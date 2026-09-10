@@ -1,19 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const {
-  createDepartement,
-  showAllDepartement,
-  updateDepartement,
-  deleteDepartement,
-  showDepartementById,
+  creerDepartement,
+  getDepartements,
+  getDepartementParId,
+  modifierDepartement,
+  supprimerDepartement,
 } = require('../controllers/departementController');
 
-router.route('/').post(createDepartement).get(showAllDepartement);
+router.route('/').post(creerDepartement).get(getDepartements);
 
 router
   .route('/:id')
-  .get(showDepartementById)
-  .put(updateDepartement)
-  .delete(deleteDepartement);
+  .get(getDepartementParId)
+  .put(modifierDepartement)
+  .delete(supprimerDepartement);
 
 module.exports = router;

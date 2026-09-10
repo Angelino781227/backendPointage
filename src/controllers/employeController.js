@@ -5,7 +5,7 @@ const creerEmploye = async (req, res, next) => {
     const employe = await Employe.create(req.body);
     res.status(201).json(employe);
   } catch (error) {
-    if (error.code === 11000) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
       res.status(400);
       return next(new Error('Matricule ou CIN déjà existant'));
     }
@@ -16,7 +16,7 @@ const creerEmploye = async (req, res, next) => {
 
 const getEmployes = async (req, res, next) => {
   try {
-    const employes = await Employe.find().sort({ createdAt: -1 });
+    const employes = await Employe.findAll({ order: [['createdAt', 'DESC']] });
     res.json(employes);
   } catch (error) {
     next(error);
@@ -25,7 +25,7 @@ const getEmployes = async (req, res, next) => {
 
 const getEmployeParId = async (req, res, next) => {
   try {
-    const employe = await Employe.findById(req.params.id);
+    const employe = await Employe.findByPk(req.params.id);
     if (!employe) {
       res.status(404);
       return next(new Error('Employé non trouvé'));
@@ -38,14 +38,12 @@ const getEmployeParId = async (req, res, next) => {
 
 const modifierEmploye = async (req, res, next) => {
   try {
-    const employe = await Employe.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const employe = await Employe.findByPk(req.params.id);
     if (!employe) {
       res.status(404);
       return next(new Error('Employé non trouvé'));
     }
+    await employe.update(req.body);
     res.json(employe);
   } catch (error) {
     next(error);
@@ -54,11 +52,12 @@ const modifierEmploye = async (req, res, next) => {
 
 const supprimerEmploye = async (req, res, next) => {
   try {
-    const employe = await Employe.findByIdAndDelete(req.params.id);
+    const employe = await Employe.findByPk(req.params.id);
     if (!employe) {
       res.status(404);
       return next(new Error('Employé non trouvé'));
     }
+    await employe.destroy();
     res.json({ message: 'Employé supprimé avec succès' });
   } catch (error) {
     next(error);
