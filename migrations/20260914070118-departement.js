@@ -5,18 +5,18 @@ module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.createTable('Departement', {
       nomDepartement: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
         unique: true,
         validate: { notEmpty: { msg: 'Le nom du département est obligatoire' } },
       },
       chefDepartement: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
         validate: { notEmpty: { msg: 'Le chef de département est obligatoire' } },
       },
       nombreEmploye: {
-        type: DataTypes.INTEGER,
+        type: Sequelize.INTEGER,
         allowNull: false,
         defaultValue: 0,
       },

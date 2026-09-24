@@ -5,42 +5,42 @@ module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.createTable('Employe', {
       matricule: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
         unique: true,
         validate: { notEmpty: { msg: 'Le matricule est obligatoire' } },
       },
       cin: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
         unique: true,
         validate: { notEmpty: { msg: 'Le CIN est obligatoire' } },
       },
       nom: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
         validate: { notEmpty: { msg: 'Le nom est obligatoire' } },
       },
       prenoms: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
         validate: { notEmpty: { msg: 'Les prénoms sont obligatoires' } },
       },
       departement: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
         validate: { notEmpty: { msg: 'Le département est obligatoire' } },
       },
       fonction: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
         validate: { notEmpty: { msg: 'La fonction est obligatoire' } },
       },
       telephone: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
       },
       adresse: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
       },
       createdAt: {
         type: Sequelize.DATE,

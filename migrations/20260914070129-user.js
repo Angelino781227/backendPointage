@@ -5,20 +5,20 @@ module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.createTable('User', {
       userBranch: {
-        type: DataTypes.INTEGER,
+        type: Sequelize.INTEGER,
         allowNull: false,
-        references: {
+        /*references: {
           model: Departement,
           key: 'id',
-        },
+        },*/
       },
       userRole: {
-        type: DataTypes.BOOLEAN,
+        type: Sequelize.BOOLEAN,
         allowNull: false,
         defaultValue: false, // false = utilisateur standard, true = administrateur
       },
       userLogin: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
         unique: true,
         validate: {
@@ -29,7 +29,7 @@ module.exports = {
         },
       },
       userPassword: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
         validate: {
           len: { args: [8, 255], msg: 'Le mot de passe doit contenir au moins 8 caractères' },
