@@ -5,6 +5,11 @@ module.exports = (sequelize, DataTypes) => {
   const Employe = sequelize.define(
     'Employe',
     {
+      employeId: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+      },
       matricule: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -45,7 +50,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: 'employes',
+      tableName: 'employe',
       timestamps: true,
     }
   );
