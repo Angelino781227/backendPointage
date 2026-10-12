@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/db');
+const { sequelize } = require('../src/config/db');
 const Employe = require('./Employe');
 
 module.exports = (sequelize, DataTypes) => {
