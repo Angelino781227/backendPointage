@@ -1,7 +1,5 @@
-const { DataTypes } = require('sequelize');
+
 const bcrypt = require('bcryptjs');
-const { sequelize } = require('../src/config/db');
-const Departement = require('./Departement');
 
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define(
@@ -10,66 +8,111 @@ module.exports = (sequelize, DataTypes) => {
       userId: {
         type: DataTypes.INTEGER,
         primaryKey: true,
-        autoIncrement: true
+        autoIncrement: true,
       },
+
       userBranch: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-          model: Departement,
+          model: 'Departement',
           key: 'id',
         },
       },
+
       userRole: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: false, // false = utilisateur standard, true = administrateur
+        defaultValue: false,
+        // false = utilisateur standard
+        // true = administrateur
       },
+
       userLogin: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(255),
         allowNull: false,
         unique: true,
         validate: {
-          len: { args: [3, 255], msg: "L'identifiant doit contenir au moins 3 caractères" },
+          notEmpty: {
+            msg: "L'identifiant est obligatoire.",
+          },
+          len: {
+            args: [3, 255],
+            msg: "L'identifiant doit contenir entre 3 et 255 caractères.",
+          },
         },
-        set(valeur) {
-          this.setDataValue('userLogin', valeur.trim().toLowerCase());
+        set(value) {
+          if (typeof value === 'string') {
+            this.setDataValue('userLogin', value.trim().toLowerCase());
+          } else {
+            this.setDataValue('userLogin', value);
+          }
         },
       },
+
       userPassword: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(255),
         allowNull: false,
         validate: {
-          len: { args: [8, 255], msg: 'Le mot de passe doit contenir au moins 8 caractères' },
+          notEmpty: {
+            msg: 'Le mot de passe est obligatoire.',
+          },
         },
       },
     },
     {
       tableName: 'users',
       timestamps: true,
+
+      // Ne pas exposer le hash par défaut.
       defaultScope: {
-        attributes: { exclude: ['userPassword'] }, // masqué par défaut, comme select:false en Mongoose
+        attributes: {
+          exclude: ['userPassword'],
+        },
       },
-      scopes: {
-        avecMotDePasse: { attributes: {} }, // à utiliser explicitement pour le login
-      },
+
       hooks: {
         beforeSave: async (user) => {
-          if (user.changed('userPassword')) {
-            const salt = await bcrypt.genSalt(10);
-            user.userPassword = await bcrypt.hash(user.userPassword, salt);
+          // Ne hash que si le mot de passe a changé.
+          if (!user.changed('userPassword')) {
+            return;
           }
+
+          const motDePasse = user.getDataValue('userPassword');
+
+          if (typeof motDePasse !== 'string' || motDePasse.length < 12) {
+            throw new Error(
+              'Le mot de passe doit contenir au moins 12 caractères.'
+            );
+          }
+
+          // bcrypt ne prend en compte que 72 octets au maximum.
+          if (Buffer.byteLength(motDePasse, 'utf8') > 72) {
+            throw new Error(
+              'Le mot de passe ne doit pas dépasser 72 octets en UTF-8.'
+            );
+          }
+
+          // Coût de calcul 12 : à ajuster selon les performances du serveur.
+          const hash = await bcrypt.hash(motDePasse, 12);
+
+          user.setDataValue('userPassword', hash);
         },
       },
     }
   );
-  
-  // Méthode d'instance pour comparer un mot de passe en clair au hash stocké
+
+  // Comparaison du mot de passe saisi avec le hash stocké.
   User.prototype.comparerMotDePasse = async function (motDePasseSaisi) {
+    if (
+      typeof motDePasseSaisi !== 'string' ||
+      typeof this.userPassword !== 'string'
+    ) {
+      return false;
+    }
+
     return bcrypt.compare(motDePasseSaisi, this.userPassword);
   };
-  
-  // Relation : un département a plusieurs utilisateurs
-  Departement.hasMany(User, { foreignKey: 'userBranch' });
-  User.belongsTo(Departement, { foreignKey: 'userBranch' });
+
+  return User;
 };

@@ -1,22 +1,27 @@
+
 'use strict';
 
-const { faker } = require('@faker-js/faker');
-
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface, Sequelize) {
-    const departement = ['Informatique', 'Ressources Humaines', 'Comptabilité', 'Logistique', 'Marketing', 'Production'];
+  async up(queryInterface) {
+    const maintenant = new Date();
 
-    for (let i = 0; i < 6; i++) {
-      departement.push({
-        
-      });
-      
-      await queryInterface.bulkInsert('Departement', departement);
-    }
+    const departements = [
+      'Informatique',
+      'Ressources Humaines',
+      'Comptabilité',
+      'Logistique',
+      'Marketing',
+      'Production',
+    ].map((nomDepartement) => ({
+      nomDepartement,
+      createdAt: maintenant,
+      updatedAt: maintenant,
+    }));
+
+    await queryInterface.bulkInsert('Departement', departements);
   },
 
-  async down (queryInterface, Sequelize) {
+  async down(queryInterface) {
     await queryInterface.bulkDelete('Departement', null, {});
-  }
+  },
 };
