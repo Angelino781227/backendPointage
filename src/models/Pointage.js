@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
-const Employe = require('./Employe');
+const { Employe } = require('../models');
 
 module.exports = (sequelize, DataTypes) => {
   const Pointage = sequelize.define(
@@ -50,10 +50,11 @@ module.exports = (sequelize, DataTypes) => {
       ],
     }
   );
-  
-  // Relation : un employé a plusieurs pointages
-  Employe.hasMany(Pointage, { foreignKey: 'employeId', onDelete: 'CASCADE' });
-  Pointage.belongsTo(Employe, { foreignKey: 'employeId' });
+  Pointage.associate = (models) => {
+    Pointage.belongsTo(models.Employe, {
+      foreignKey: 'employeId',
+    });
+  };
 
   return Pointage;
 };

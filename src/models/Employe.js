@@ -55,5 +55,12 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
+  Employe.associate = (models) => {
+    Employe.hasMany(models.Pointage, {
+      foreignKey: 'employeId',
+      onDelete: 'CASCADE',
+    });
+  };
+
   return Employe;
 };
