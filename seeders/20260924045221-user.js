@@ -19,7 +19,7 @@ module.exports = {
 
     // Récupérer un département existant.
     const [departements] = await queryInterface.sequelize.query(
-      'SELECT departementId FROM Departement ORDER BY departementId ASC LIMIT 1'
+      'SELECT departementId FROM Departements ORDER BY departementId ASC LIMIT 1'
     );
 
     if (departements.length === 0) {

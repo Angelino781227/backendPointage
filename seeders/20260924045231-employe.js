@@ -49,7 +49,7 @@ const villes = [
 module.exports = {
   async up(queryInterface) {
     const departements = await queryInterface.sequelize.query(
-      'SELECT departementId, nomDepartement FROM Departement',
+      'SELECT departementId, nomDepartement FROM Departements',
       { type: queryInterface.sequelize.QueryTypes.SELECT }
     );
 

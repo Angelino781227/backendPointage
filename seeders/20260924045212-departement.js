@@ -18,10 +18,10 @@ module.exports = {
       updatedAt: maintenant,
     }));
 
-    await queryInterface.bulkInsert('Departement', departements);
+    await queryInterface.bulkInsert('Departements', departements);
   },
 
   async down(queryInterface) {
-    await queryInterface.bulkDelete('Departement', null, {});
+    await queryInterface.bulkDelete('Departements', null, {});
   },
 };
