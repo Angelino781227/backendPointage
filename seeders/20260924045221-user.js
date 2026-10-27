@@ -1,6 +1,8 @@
 
 'use strict';
 
+require('dotenv').config();
+
 const bcrypt = require('bcryptjs');
 
 module.exports = {
@@ -40,7 +42,6 @@ module.exports = {
 
     await queryInterface.bulkInsert('user', [
       {
-        userBranch: departements[0].id,
         userRole: true,
         userLogin: 'admin',
         userPassword: hash,

@@ -6,6 +6,10 @@ module.exports = (sequelize, DataTypes) => {
   const Pointage = sequelize.define(
     'Pointage',
     {
+      employeId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
       date: {
         type: DataTypes.DATEONLY,
         allowNull: false,

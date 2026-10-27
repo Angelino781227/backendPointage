@@ -10,16 +10,7 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         autoIncrement: true,
       },
-
-      userBranch: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'Departement',
-          key: 'id',
-        },
-      },
-
+      
       userRole: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

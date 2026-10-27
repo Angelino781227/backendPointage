@@ -49,7 +49,7 @@ const villes = [
 module.exports = {
   async up(queryInterface) {
     const departements = await queryInterface.sequelize.query(
-      'SELECT id, nom FROM Departements',
+      'SELECT departementId, nomDepartement FROM Departement',
       { type: queryInterface.sequelize.QueryTypes.SELECT }
     );
 
@@ -60,7 +60,7 @@ module.exports = {
     }
 
     const maintenant = new Date();
-    const nombreEmployes = faker.number.int({ min: 5, max: 10 });
+    const nombreEmployes = faker.number.int({ min: 5, max: 15 });
 
     const employes = Array.from({ length: nombreEmployes }, (_, i) => {
       const departement = faker.helpers.arrayElement(departements);
@@ -70,9 +70,9 @@ module.exports = {
         cin: faker.string.numeric(12),
         nom: faker.person.lastName(),
         prenoms: faker.person.firstName(),
-        departementId: departement.id,
+        departement: departement.departementId,
         fonction: faker.helpers.arrayElement(
-          fonctionsParDepartement[departement.nom]
+          fonctionsParDepartement[departement.nomDepartement]
         ),
         telephone: faker.phone.number({ style: 'national' }),
         adresse: faker.helpers.arrayElement(villes),

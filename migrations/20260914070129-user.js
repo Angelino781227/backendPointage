@@ -12,17 +12,6 @@ module.exports = {
         allowNull: false,
       },
 
-      userBranch: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'Departement', // À adapter au nom réel de ta table
-          key: 'departementId',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'RESTRICT',
-      },
-
       userRole: {
         type: Sequelize.BOOLEAN,
         allowNull: false,

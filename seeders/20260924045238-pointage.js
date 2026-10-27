@@ -25,7 +25,7 @@ function getJoursOuvresSemaine() {
 module.exports = {
   async up(queryInterface) {
     const employes = await queryInterface.sequelize.query(
-      'SELECT id FROM Employes',
+      'SELECT employeId FROM Employe',
       { type: queryInterface.sequelize.QueryTypes.SELECT }
     );
 
@@ -49,7 +49,7 @@ module.exports = {
         const present = Math.random() < tauxPresence;
 
         pointages.push({
-          employeId: employe.id,
+          employeId: employe.employeId,
           date: jour,
           arriveeMatin: present,
           departMatin: present && Math.random() > 0.05,

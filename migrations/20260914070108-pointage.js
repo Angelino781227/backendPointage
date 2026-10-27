@@ -4,6 +4,10 @@
 module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.createTable('Pointage', {
+      employeId: {
+        type: Sequelize.INTEGER,
+        allowNull: false
+      },
       date: {
         type: Sequelize.DATEONLY,
         allowNull: false,

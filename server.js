@@ -3,10 +3,10 @@ const app = require('./src/app');
 const { sequelize, connectDB } = require('./src/config/db');
 
 // Charger tous les modèles pour que Sequelize connaisse leurs relations avant sync()
-require('./models/Departement');
-require('./models/Employe');
-require('./models/Pointage');
-require('./models/User');
+require('./src/models/Departement');
+require('./src/models/Employe');
+require('./src/models/Pointage');
+require('./src/models/User');
 
 const PORT = process.env.PORT || 5000;
 
