@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../src/config/db');
+const { sequelize } = require('../config/db');
 const Employe = require('./Employe');
 
 module.exports = (sequelize, DataTypes) => {
@@ -54,4 +54,6 @@ module.exports = (sequelize, DataTypes) => {
   // Relation : un employé a plusieurs pointages
   Employe.hasMany(Pointage, { foreignKey: 'employeId', onDelete: 'CASCADE' });
   Pointage.belongsTo(Employe, { foreignKey: 'employeId' });
+
+  return Pointage;
 };

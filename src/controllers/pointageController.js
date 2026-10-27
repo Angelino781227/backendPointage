@@ -1,5 +1,5 @@
-const Pointage = require('../models/Pointage');
-const Employe = require('../models/Employe');
+const { Pointage } = require('../models');
+const { Employe } = require('../models');
 
 const creerPointage = async (req, res, next) => {
   try {

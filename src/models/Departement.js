@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../src/config/db');
+const { sequelize } = require('../config/db');
 
 module.exports = (sequelize, DataTypes) => {
   const Departement = sequelize.define(
@@ -32,4 +32,6 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
     }
   );
+
+  return Departement;
 };
