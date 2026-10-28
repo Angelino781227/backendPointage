@@ -15,10 +15,13 @@ module.exports = {
         unique: true,
         validate: { notEmpty: { msg: 'Le nom du département est obligatoire' } },
       },
-      chefDepartement: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        validate: { notEmpty: { msg: 'Le chef de département est obligatoire' } },
+      chefDepartementId: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        references: {
+          model: 'Employe',
+          key: 'employeId',
+        },
       },
       nombreEmploye: {
         type: Sequelize.INTEGER,

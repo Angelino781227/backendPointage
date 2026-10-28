@@ -14,14 +14,16 @@ module.exports = {
       'Production',
     ].map((nomDepartement) => ({
       nomDepartement,
+      chefDepartementId: null,
+      nombreEmploye: 0,
       createdAt: maintenant,
       updatedAt: maintenant,
     }));
 
-    await queryInterface.bulkInsert('Departements', departements);
+    await queryInterface.bulkInsert('departements', departements);
   },
 
   async down(queryInterface) {
-    await queryInterface.bulkDelete('Departements', null, {});
+    await queryInterface.bulkDelete('departements', null, {});
   },
 };

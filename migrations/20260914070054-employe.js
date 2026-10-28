@@ -31,6 +31,14 @@ module.exports = {
         allowNull: false,
         validate: { notEmpty: { msg: 'Les prénoms sont obligatoires' } },
       },
+      departementId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'departements',
+          key: 'departementId',
+        },
+      },
       departement: {
         type: Sequelize.STRING,
         allowNull: false,

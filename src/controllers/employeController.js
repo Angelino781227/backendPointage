@@ -1,8 +1,12 @@
 const { Employe } = require('../models');
+const {
+  recalculerNombreEmployes,
+} = require('./departementController');
 
 const creerEmploye = async (req, res, next) => {
   try {
     const employe = await Employe.create(req.body);
+    await recalculerNombreEmployes();
     res.status(201).json(employe);
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
@@ -44,6 +48,7 @@ const modifierEmploye = async (req, res, next) => {
       return next(new Error('Employé non trouvé'));
     }
     await employe.update(req.body);
+    await recalculerNombreEmployes();
     res.json(employe);
   } catch (error) {
     next(error);
@@ -58,6 +63,7 @@ const supprimerEmploye = async (req, res, next) => {
       return next(new Error('Employé non trouvé'));
     }
     await employe.destroy();
+    await recalculerNombreEmployes();
     res.json({ message: 'Employé supprimé avec succès' });
   } catch (error) {
     next(error);
