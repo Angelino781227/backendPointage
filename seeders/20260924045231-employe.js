@@ -60,7 +60,7 @@ module.exports = {
     }
 
     const maintenant = new Date();
-    const nombreEmployes = faker.number.int({ min: 5, max: 15 });
+    const nombreEmployes = faker.number.int({ min: 30, max: 45 });
 
     const employes = Array.from({ length: nombreEmployes }, (_, i) => {
       const departement = faker.helpers.arrayElement(departements);
@@ -70,7 +70,7 @@ module.exports = {
         cin: faker.string.numeric(12),
         nom: faker.person.lastName(),
         prenoms: faker.person.firstName(),
-        departement: departement.departementId,
+        departement: departement.nomDepartement,
         fonction: faker.helpers.arrayElement(
           fonctionsParDepartement[departement.nomDepartement]
         ),

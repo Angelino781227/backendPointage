@@ -1,4 +1,4 @@
-const { Departement } = require('../models');
+const { Departement, Employe } = require('../models');
 
 const creerDepartement = async (req, res, next) => {
   try {
@@ -64,10 +64,61 @@ const supprimerDepartement = async (req, res, next) => {
   }
 };
 
+async function recalculerNombreEmployes() {
+  const departements = await Departement.findAll();
+
+  for (const departement of departements) {
+    const nombre = await Employe.count({
+      where: {
+        departement: departement.nom,
+      },
+    });
+
+    await departement.update({
+      nombreEmploye: nombre,
+    });
+  }
+}
+
+// Détecter les candidats potentiels au poste de chef
+async function trouverCandidatsChefs() {
+  const employes = await Employe.findAll({
+    attributes: [
+      'employeId',
+      'matricule',
+      'nom',
+      'prenoms',
+      'departement',
+      'fonction',
+    ],
+  });
+
+  const regexChef = /\b(chef|responsable|charge)\b/i;
+
+  return employes
+    .filter(employe => {
+      const fonctionNormalisee = (employe.fonction || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+      return regexChef.test(fonctionNormalisee);
+    })
+    .map(employe => ({
+      employeId: employe.employeId,
+      matricule: employe.matricule,
+      nom: employe.nom,
+      prenoms: employe.prenoms,
+      departement: employe.departement,
+      fonction: employe.fonction,
+    }));
+}
+
 module.exports = {
   creerDepartement,
   getDepartements,
   getDepartementParId,
   modifierDepartement,
   supprimerDepartement,
+  recalculerNombreEmployes,
+  trouverCandidatsChefs
 };
