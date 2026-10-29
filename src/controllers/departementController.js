@@ -18,117 +18,68 @@ const recalculerNombreEmployes = async () => {
   }
 };
 
-// Détecter les candidats potentiels au poste de chef
-const trouverCandidatsChefs = async (req, res, next) => {
-  try {
-    const employes = await Employe.findAll({
-      attributes: [
-        'employeId',
-        'matricule',
-        'nom',
-        'prenoms',
-        'departement',
-        'fonction',
-      ],
-      order: [['nom', 'ASC']],
-    });
-
-    const regexChef = /\b(chef|responsable|charge)\b/i;
-
-    const candidats = employes
-      .filter((employe) => {
-        const fonctionNormalisee = (employe.fonction || '')
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '');
-
-        return regexChef.test(fonctionNormalisee);
-      })
-      .map((employe) => ({
-        employeId: employe.employeId,
-        matricule: employe.matricule,
-        nom: employe.nom,
-        prenoms: employe.prenoms,
-        departement: employe.departement,
-        fonction: employe.fonction,
-      }));
-
-    res.json(candidats);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Définir le chef d'un département à partir d'un employé existant
-const definirChefDepartement = async (req, res, next) => {
-  try {
-    const { employeId } = req.body;
-
-    if (!employeId) {
-      res.status(400);
-      return next(new Error("L'identifiant de l'employé est obligatoire"));
-    }
-
-    const departement = await Departement.findByPk(req.params.id);
-
-    if (!departement) {
-      res.status(404);
-      return next(new Error('Département non trouvé'));
-    }
-
-    const employe = await Employe.findByPk(employeId);
-
-    if (!employe) {
-      res.status(404);
-      return next(new Error('Employé non trouvé'));
-    }
-
-    // L'employé doit appartenir au département sélectionné.
-    if (employe.departement !== departement.nomDepartement) {
-      res.status(400);
-      return next(
-        new Error("Cet employé n'appartient pas à ce département")
-      );
-    }
-
-    // Le poste doit contenir chef, responsable ou chargé.
-    const fonctionNormalisee = (employe.fonction || '')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
-
-    if (!/\b(chef|responsable|charge)\b/i.test(fonctionNormalisee)) {
-      res.status(400);
-      return next(
-        new Error(
-          "La fonction de cet employé ne correspond pas aux critères de détection d'un chef"
-        )
-      );
-    }
-
-    const nomComplet = `${employe.prenoms} ${employe.nom}`;
-
-    await departement.update({
-      chefDepartement: nomComplet,
-    });
-
-    res.json({
-      message: 'Chef de département mis à jour avec succès',
-      departement,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 const creerDepartement = async (req, res, next) => {
   try {
-    const departement = await Departement.create(req.body);
-    res.status(201).json(departement);
+    const { nomDepartement, nomEmploye, matricule } = req.body;
+
+    if (
+      typeof nomDepartement !== 'string' ||
+      !nomDepartement.trim() ||
+      typeof nomEmploye !== 'string' ||
+      !nomEmploye.trim() ||
+      typeof matricule !== 'string' ||
+      !matricule.trim()
+    ) {
+      return res.status(400).json({
+        message: 'Le département, le nom de l’employé et son matricule sont obligatoires.',
+      });
+    }
+
+    const resultat = await sequelize.transaction(async (transaction) => {
+      const departement = await Departement.create(
+        {
+          nomDepartement: nomDepartement.trim(),
+          nombreEmploye: 0,
+          chefDepartementId: null,
+        },
+        { transaction }
+      );
+
+      const employe = await Employe.create(
+        {
+          nom: nomEmploye.trim(),
+          matricule: matricule.trim(),
+          departementId: departement.departementId,
+          cin: null,
+          prenoms: null,
+          fonction: null,
+        },
+        { transaction }
+      );
+
+      await departement.update(
+        {
+          chefDepartementId: employe.employeId,
+          nombreEmploye: 1,
+        },
+        { transaction }
+      );
+
+      return { departement, employe };
+    });
+
+    return res.status(201).json({
+      message: 'Département et chef provisoire créés avec succès.',
+      ...resultat,
+    });
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
-      res.status(400);
-      return next(new Error('Un département avec ce nom existe déjà'));
+      return res.status(409).json({
+        message: 'Ce nom de département ou ce matricule existe déjà.',
+      });
     }
-    next(error);
+
+    return next(error);
   }
 };
 
@@ -180,6 +131,56 @@ const modifierDepartement = async (req, res, next) => {
   }
 };
 
+const modifierChefDepartement = async (req, res, next) => {
+  try {
+    const { employeId } = req.body;
+
+    const resultat = await sequelize.transaction(async (transaction) => {
+      const departement = await Departement.findByPk(req.params.id, {
+        transaction,
+      });
+
+      if (!departement) {
+        const error = new Error('Département non trouvé.');
+        error.status = 404;
+        throw error;
+      }
+
+      const employe = await Employe.findByPk(employeId, {
+        transaction,
+      });
+
+      if (!employe) {
+        const error = new Error('Employé non trouvé.');
+        error.status = 404;
+        throw error;
+      }
+
+      if (employe.departementId !== departement.departementId) {
+        const error = new Error(
+          'Le chef doit appartenir au département concerné.'
+        );
+        error.status = 400;
+        throw error;
+      }
+
+      await departement.update(
+        { chefDepartementId: employe.employeId },
+        { transaction }
+      );
+
+      return departement;
+    });
+
+    return res.json({
+      message: 'Chef de département modifié avec succès.',
+      departement: resultat,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 const supprimerDepartement = async (req, res, next) => {
   try {
     const departement = await Departement.findByPk(req.params.id);
@@ -217,8 +218,7 @@ module.exports = {
   getDepartements,
   getDepartementParId,
   modifierDepartement,
+  modifierChefDepartement,
   supprimerDepartement,
-  recalculerNombreEmployes,
-  trouverCandidatsChefs,
-  definirChefDepartement,
+  recalculerNombreEmployes
 };

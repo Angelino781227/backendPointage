@@ -38,6 +38,8 @@ module.exports = {
           model: 'departements',
           key: 'departementId',
         },
+        onUpdate: 'CASCADE',
+        onDelete: 'RESTRICT',
       },
       departement: {
         type: Sequelize.STRING,

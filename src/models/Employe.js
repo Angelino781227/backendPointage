@@ -1,3 +1,4 @@
+'use strict';
 
 module.exports = (sequelize, DataTypes) => {
   const Employe = sequelize.define(
@@ -8,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         autoIncrement: true,
       },
+
       matricule: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -18,16 +20,13 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
+
       cin: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         unique: true,
-        validate: {
-          notEmpty: {
-            msg: 'Le CIN est obligatoire',
-          },
-        },
       },
+
       nom: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -37,15 +36,12 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
+
       prenoms: {
         type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-          notEmpty: {
-            msg: 'Les prénoms sont obligatoires',
-          },
-        },
+        allowNull: true,
       },
+
       departementId: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -53,26 +49,21 @@ module.exports = (sequelize, DataTypes) => {
           model: 'departements',
           key: 'departementId',
         },
-        validate: {
-          notNull: {
-            msg: 'Le département est obligatoire',
-          },
-        },
       },
+
       fonction: {
         type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-          notEmpty: {
-            msg: 'La fonction est obligatoire',
-          },
-        },
+        allowNull: true,
       },
+
       telephone: {
         type: DataTypes.STRING,
+        allowNull: true,
       },
+
       adresse: {
         type: DataTypes.STRING,
+        allowNull: true,
       },
     },
     {
@@ -82,7 +73,6 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   Employe.associate = (models) => {
-    // Un employé appartient à un département.
     Employe.belongsTo(models.Departement, {
       foreignKey: 'departementId',
       as: 'departement',
@@ -90,7 +80,6 @@ module.exports = (sequelize, DataTypes) => {
       onUpdate: 'CASCADE',
     });
 
-    // Un employé peut avoir plusieurs pointages.
     Employe.hasMany(models.Pointage, {
       foreignKey: 'employeId',
       onDelete: 'CASCADE',

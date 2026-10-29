@@ -1,6 +1,4 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/db');
-
+'use strict';
 
 module.exports = (sequelize, DataTypes) => {
   const Departement = sequelize.define(
@@ -11,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         autoIncrement: true,
       },
+
       nomDepartement: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -21,14 +20,12 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
+
       chefDepartementId: {
         type: DataTypes.INTEGER,
-        allowNull: true, // Un département peut être créé sans chef
-        references: {
-          model: 'Employe',
-          key: 'employeId',
-        },
+        allowNull: true,
       },
+
       nombreEmploye: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -44,10 +41,18 @@ module.exports = (sequelize, DataTypes) => {
   Departement.associate = (models) => {
     Departement.hasMany(models.Employe, {
       foreignKey: 'departementId',
-      onDelete: 'CASCADE'
+      as: 'employes',
+      onDelete: 'RESTRICT',
+      onUpdate: 'CASCADE',
+    });
+
+    Departement.belongsTo(models.Employe, {
+      foreignKey: 'chefDepartementId',
+      as: 'chef',
+      onDelete: 'SET NULL',
+      onUpdate: 'CASCADE',
     });
   };
 
   return Departement;
 };
-

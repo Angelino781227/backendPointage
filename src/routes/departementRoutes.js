@@ -5,9 +5,8 @@ const {
   getDepartements,
   getDepartementParId,
   modifierDepartement,
-  supprimerDepartement,
-  definirChefDepartement,
-  trouverCandidatsChefs
+  modifierChefDepartement,
+  supprimerDepartement
 } = require('../controllers/departementController');
 
 router.route('/').post(creerDepartement).get(getDepartements);
@@ -18,8 +17,7 @@ router
   .put(modifierDepartement)
   .delete(supprimerDepartement);
 
-router.get('/candidat-chefs', trouverCandidatsChefs);
-router.patch('/:id/chef', definirChefDepartement);
+router.patch('/:id/chef', modifierChefDepartement);
   
 
 module.exports = router;

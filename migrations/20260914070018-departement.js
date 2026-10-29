@@ -1,49 +1,46 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('Departement', {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('departements', {
       departementId: {
         type: Sequelize.INTEGER,
         primaryKey: true,
-        autoIncrement: true
+        autoIncrement: true,
+        allowNull: false,
       },
+
       nomDepartement: {
         type: Sequelize.STRING,
         allowNull: false,
         unique: true,
-        validate: { notEmpty: { msg: 'Le nom du département est obligatoire' } },
       },
+
+      // La clé étrangère sera ajoutée dans une migration ultérieure.
       chefDepartementId: {
         type: Sequelize.INTEGER,
         allowNull: true,
-        references: {
-          model: 'Employe',
-          key: 'employeId',
-        },
       },
+
       nombreEmploye: {
         type: Sequelize.INTEGER,
         allowNull: false,
         defaultValue: 0,
       },
+
       createdAt: {
         type: Sequelize.DATE,
-        allowNull: false
+        allowNull: false,
       },
+
       updatedAt: {
         type: Sequelize.DATE,
-        allowNull: false
-      }
-    },
-    {
-      tableName: 'departements',
-      timestamps: true,
+        allowNull: false,
+      },
     });
   },
 
-  async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('Departement');
-  }
+  async down(queryInterface) {
+    await queryInterface.dropTable('departements');
+  },
 };
