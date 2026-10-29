@@ -1,8 +1,7 @@
-
 'use strict';
 
 module.exports = {
-  async up(queryInterface) {
+  async up(queryInterface, Sequelize) {
     const maintenant = new Date();
 
     const departements = [

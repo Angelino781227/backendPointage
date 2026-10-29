@@ -17,7 +17,7 @@ module.exports = {
       },
       cin: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
         unique: true,
         validate: { notEmpty: { msg: 'Le CIN est obligatoire' } },
       },
@@ -28,7 +28,7 @@ module.exports = {
       },
       prenoms: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
         validate: { notEmpty: { msg: 'Les prénoms sont obligatoires' } },
       },
       departementId: {
@@ -43,12 +43,12 @@ module.exports = {
       },
       departement: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
         validate: { notEmpty: { msg: 'Le département est obligatoire' } },
       },
       fonction: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
         validate: { notEmpty: { msg: 'La fonction est obligatoire' } },
       },
       telephone: {

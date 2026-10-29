@@ -51,6 +51,11 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
 
+      departement: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+
       fonction: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -75,7 +80,7 @@ module.exports = (sequelize, DataTypes) => {
   Employe.associate = (models) => {
     Employe.belongsTo(models.Departement, {
       foreignKey: 'departementId',
-      as: 'departement',
+      as: 'departements',
       onDelete: 'RESTRICT',
       onUpdate: 'CASCADE',
     });

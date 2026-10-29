@@ -61,10 +61,10 @@ module.exports = {
       }
     }
 
-    await queryInterface.bulkInsert('Pointages', pointages);
+    await queryInterface.bulkInsert('Pointage', pointages);
   },
 
   async down(queryInterface) {
-    await queryInterface.bulkDelete('Pointages', null, {});
+    await queryInterface.bulkDelete('Pointage', null, {});
   },
 };

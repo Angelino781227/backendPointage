@@ -1,7 +1,7 @@
-
 'use strict';
 
 const { faker } = require('@faker-js/faker');
+const { QueryTypes } = require('sequelize');
 
 const fonctionsParDepartement = {
   Informatique: [
@@ -48,94 +48,156 @@ const villes = [
 
 module.exports = {
   async up(queryInterface) {
-    const { QueryTypes } = queryInterface.sequelize;
-
-    const departements = await queryInterface.sequelize.query(
-      'SELECT departementId, nomDepartement FROM departements',
-      { type: QueryTypes.SELECT }
-    );
-
-    if (departements.length === 0) {
-      throw new Error(
-        'Aucun département. Exécute le seeder des départements en premier.'
+    await queryInterface.sequelize.transaction(async (transaction) => {
+      const departements = await queryInterface.sequelize.query(
+        `SELECT departementId, nomDepartement FROM departements`,
+        {
+          type: QueryTypes.SELECT,
+          transaction,
+        }
       );
-    }
 
-    // Vérifier que les fonctions sont définies pour chaque département.
-    for (const departement of departements) {
-      if (!fonctionsParDepartement[departement.nomDepartement]) {
+      if (departements.length === 0) {
         throw new Error(
-          `Aucune fonction définie pour le département ${departement.nomDepartement}.`
+          'Aucun département trouvé. Exécute le seeder des départements en premier.'
         );
       }
-    }
 
-    const maintenant = new Date();
-    const nombreEmployes = faker.number.int({ min: 30, max: 45 });
+      const maintenant = new Date();
+      let compteur = 1;
+      const employes = [];
+      const chefsProvisoires = [];
 
-    const employes = Array.from(
-      { length: nombreEmployes },
-      (_, i) => {
+      // 1. Créer un employé provisoire pour chaque département.
+      for (const departement of departements) {
+        const matricule = `EMP-${String(compteur++).padStart(3, '0')}`;
+
+        employes.push({
+          matricule,
+          nom: 'À compléter',
+          prenoms: null,
+          cin: null,
+          fonction: null,
+          departementId: departement.departementId,
+          telephone: null,
+          adresse: null,
+          createdAt: maintenant,
+          updatedAt: maintenant,
+        });
+
+        chefsProvisoires.push({
+          departementId: departement.departementId,
+          matricule,
+        });
+      }
+
+      // 2. Ajouter des employés de démonstration.
+      const nombreTotal = Math.max(
+        departements.length,
+        faker.number.int({ min: 30, max: 45 })
+      );
+
+      while (employes.length < nombreTotal) {
         const departement = faker.helpers.arrayElement(departements);
+        const fonctions =
+          fonctionsParDepartement[departement.nomDepartement] || [
+            'Employé',
+          ];
 
-        return {
-          matricule: `EMP-${String(i + 1).padStart(3, '0')}`,
+        employes.push({
+          matricule: `EMP-${String(compteur++).padStart(3, '0')}`,
           cin: faker.string.numeric(12),
           nom: faker.person.lastName(),
           prenoms: faker.person.firstName(),
-
-          // Nouvelle relation par clé étrangère
+          fonction: faker.helpers.arrayElement(fonctions),
           departementId: departement.departementId,
-
-          fonction: faker.helpers.arrayElement(
-            fonctionsParDepartement[departement.nomDepartement]
-          ),
+          departement: departement.nomDepartement,
           telephone: faker.phone.number({ style: 'national' }),
           adresse: faker.helpers.arrayElement(villes),
           createdAt: maintenant,
           updatedAt: maintenant,
-        };
+        });
       }
-    );
 
-    await queryInterface.bulkInsert('Employe', employes);
+      await queryInterface.bulkInsert('employe', employes, {
+        transaction,
+      });
 
-    // Actualiser les effectifs après insertion.
-    for (const departement of departements) {
-      const resultat = await queryInterface.sequelize.query(
-        `SELECT COUNT(*) AS total
-         FROM Employe
-         WHERE departementId = :departementId`,
-        {
-          replacements: {
+      // 3. Désigner le premier employé de chaque département comme chef.
+      for (const chef of chefsProvisoires) {
+        const resultat = await queryInterface.sequelize.query(
+          `SELECT employeId
+           FROM employe
+           WHERE matricule = :matricule`,
+          {
+            replacements: { matricule: chef.matricule },
+            type: QueryTypes.SELECT,
+            transaction,
+          }
+        );
+
+        if (!resultat.length) {
+          throw new Error(
+            `Employé provisoire introuvable : ${chef.matricule}`
+          );
+        }
+
+        await queryInterface.bulkUpdate(
+          'departements',
+          {
+            chefDepartementId: resultat[0].employeId,
+          },
+          {
+            departementId: chef.departementId,
+          },
+          { transaction }
+        );
+      }
+
+      // 4. Recalculer le nombre réel d'employés de chaque département.
+      for (const departement of departements) {
+        const resultat = await queryInterface.sequelize.query(
+          `SELECT COUNT(*) AS total
+           FROM employe
+           WHERE departementId = :departementId`,
+          {
+            replacements: {
+              departementId: departement.departementId,
+            },
+            type: QueryTypes.SELECT,
+            transaction,
+          }
+        );
+
+        await queryInterface.bulkUpdate(
+          'departements',
+          {
+            nombreEmploye: Number(resultat[0].total),
+          },
+          {
             departementId: departement.departementId,
           },
-          type: QueryTypes.SELECT,
-        }
-      );
+          { transaction }
+        );
+      }
+    });
+  },
+
+  async down(queryInterface) {
+    await queryInterface.sequelize.transaction(async (transaction) => {
+      await queryInterface.bulkDelete('employe', null, {
+        transaction,
+      });
 
       await queryInterface.bulkUpdate(
         'departements',
         {
-          nombreEmploye: Number(resultat[0].total),
-          updatedAt: maintenant,
+          chefDepartementId: null,
+          nombreEmploye: 0,
         },
-        {
-          departementId: departement.departementId,
-        }
+        {},
+        { transaction }
       );
-    }
-
-    // Aucun chef n'est attribué automatiquement.
-    // Le chef sera choisi manuellement depuis l'application.
-  },
-
-  async down(queryInterface) {
-    await queryInterface.bulkDelete('Employe', null, {});
-    await queryInterface.bulkUpdate(
-      'departements',
-      { nombreEmploye: 0, chefDepartementId: null },
-      {}
-    );
+    });
   },
 };

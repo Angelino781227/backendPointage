@@ -9,7 +9,7 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     // Vérifier si le compte existe déjà.
     const [users] = await queryInterface.sequelize.query(
-      "SELECT userId FROM user WHERE userLogin = 'admin'"
+      "SELECT userId FROM users WHERE userLogin = 'admin'"
     );
 
     if (users.length > 0) {
@@ -40,7 +40,7 @@ module.exports = {
     const hash = await bcrypt.hash(motDePasse, 12);
     const maintenant = new Date();
 
-    await queryInterface.bulkInsert('user', [
+    await queryInterface.bulkInsert('users', [
       {
         userRole: true,
         userLogin: 'admin',
@@ -55,7 +55,7 @@ module.exports = {
 
   async down(queryInterface) {
     await queryInterface.bulkDelete(
-      'user',
+      'users',
       { userLogin: 'admin' },
       {}
     );
